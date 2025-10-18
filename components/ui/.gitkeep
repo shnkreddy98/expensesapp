@@ -1,0 +1,4 @@
+# UI Components
+
+This directory is for shadcn/ui components.
+Add components using: npx shadcn-ui@latest add [component-name]

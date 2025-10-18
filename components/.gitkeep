@@ -1,0 +1,5 @@
+# Components
+
+This directory is for custom React components.
+- Place shadcn/ui components in the `ui/` subdirectory
+- Place custom components directly in this directory or organize by feature
