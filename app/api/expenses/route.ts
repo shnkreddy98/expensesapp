@@ -36,6 +36,7 @@ export async function POST(request: Request) {
         category: data.category,
         date: new Date(data.date),
         description: data.description,
+        receiptPath: data.receiptPath,
       },
     })
 

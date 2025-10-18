@@ -6,6 +6,7 @@ export const expenseSchema = z.object({
   category: z.string().min(1, 'Category is required'),
   date: z.string().datetime().or(z.date()),
   description: z.string().optional(),
+  receiptPath: z.string().optional(),
 })
 
 export type ExpenseInput = z.infer<typeof expenseSchema>

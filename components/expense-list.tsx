@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Trash2 } from 'lucide-react'
+import { Trash2, Image as ImageIcon, X } from 'lucide-react'
 
 const CATEGORIES = [
   'All',
@@ -31,6 +31,7 @@ interface Expense {
   category: string
   date: string
   description?: string
+  receiptPath?: string
 }
 
 interface ExpenseListProps {
@@ -41,6 +42,7 @@ interface ExpenseListProps {
 export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
   const [selectedCategory, setSelectedCategory] = useState('All')
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [selectedReceipt, setSelectedReceipt] = useState<string | null>(null)
 
   const filteredExpenses =
     selectedCategory === 'All'
@@ -186,27 +188,45 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
                   key={expense.id}
                   className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-lg">
-                            ${expense.amount.toFixed(2)}
-                          </span>
-                          <span className="text-sm text-gray-600">•</span>
-                          <span className="text-sm font-medium text-gray-700">
-                            {expense.category}
-                          </span>
-                        </div>
-                        {expense.description && (
-                          <p className="text-sm text-gray-600 mt-1">
-                            {expense.description}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500 mt-1">
-                          {formatDate(expense.date)}
-                        </p>
+                  <div className="flex-1 flex items-center gap-3">
+                    {/* Receipt Thumbnail */}
+                    {expense.receiptPath && (
+                      <div
+                        className="w-16 h-16 flex-shrink-0 rounded-lg overflow-hidden border-2 border-gray-300 cursor-pointer hover:border-blue-500 transition-colors"
+                        onClick={() => setSelectedReceipt(expense.receiptPath!)}
+                      >
+                        <img
+                          src={expense.receiptPath}
+                          alt="Receipt"
+                          className="w-full h-full object-cover"
+                        />
                       </div>
+                    )}
+
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-lg">
+                          ${expense.amount.toFixed(2)}
+                        </span>
+                        <span className="text-sm text-gray-600">•</span>
+                        <span className="text-sm font-medium text-gray-700">
+                          {expense.category}
+                        </span>
+                        {expense.receiptPath && (
+                          <>
+                            <span className="text-sm text-gray-600">•</span>
+                            <ImageIcon className="h-4 w-4 text-blue-600" />
+                          </>
+                        )}
+                      </div>
+                      {expense.description && (
+                        <p className="text-sm text-gray-600 mt-1">
+                          {expense.description}
+                        </p>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        {formatDate(expense.date)}
+                      </p>
                     </div>
                   </div>
                   <Button
@@ -249,6 +269,33 @@ export function ExpenseList({ expenses, onDelete }: ExpenseListProps) {
             </div>
           </CardContent>
         </Card>
+      )}
+
+      {/* Receipt Modal */}
+      {selectedReceipt && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
+          onClick={() => setSelectedReceipt(null)}
+        >
+          <div
+            className="relative max-w-4xl max-h-[90vh] bg-white rounded-lg overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Button
+              variant="ghost"
+              size="icon"
+              className="absolute top-2 right-2 z-10 bg-white/90 hover:bg-white"
+              onClick={() => setSelectedReceipt(null)}
+            >
+              <X className="h-6 w-6" />
+            </Button>
+            <img
+              src={selectedReceipt}
+              alt="Receipt"
+              className="w-full h-full object-contain"
+            />
+          </div>
+        </div>
       )}
     </div>
   )

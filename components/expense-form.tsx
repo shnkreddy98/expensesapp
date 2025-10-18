@@ -34,8 +34,28 @@ export function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
   const [category, setCategory] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [description, setDescription] = useState('')
+  const [receiptFile, setReceiptFile] = useState<File | null>(null)
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      setReceiptFile(file)
+      // Create preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setReceiptPreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const handleRemoveReceipt = () => {
+    setReceiptFile(null)
+    setReceiptPreview(null)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -43,6 +63,28 @@ export function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
     setError('')
 
     try {
+      let receiptPath: string | undefined
+
+      // Upload receipt if provided
+      if (receiptFile) {
+        const formData = new FormData()
+        formData.append('file', receiptFile)
+
+        const uploadResponse = await fetch('/api/upload', {
+          method: 'POST',
+          body: formData,
+        })
+
+        if (!uploadResponse.ok) {
+          const uploadData = await uploadResponse.json()
+          throw new Error(uploadData.error || 'Failed to upload receipt')
+        }
+
+        const uploadData = await uploadResponse.json()
+        receiptPath = uploadData.path
+      }
+
+      // Create expense
       const response = await fetch('/api/expenses', {
         method: 'POST',
         headers: {
@@ -53,6 +95,7 @@ export function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
           category,
           date: new Date(date).toISOString(),
           description: description || undefined,
+          receiptPath,
         }),
       })
 
@@ -66,6 +109,8 @@ export function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
       setCategory('')
       setDate(new Date().toISOString().split('T')[0])
       setDescription('')
+      setReceiptFile(null)
+      setReceiptPreview(null)
       onExpenseAdded()
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred')
@@ -133,6 +178,41 @@ export function ExpenseForm({ onExpenseAdded }: ExpenseFormProps) {
                 onChange={(e) => setDescription(e.target.value)}
               />
             </div>
+          </div>
+
+          {/* Receipt Upload */}
+          <div className="space-y-2">
+            <Label htmlFor="receipt">Receipt (optional)</Label>
+            {!receiptPreview ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  id="receipt"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleFileChange}
+                  className="cursor-pointer"
+                />
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <div className="relative w-32 h-32 border rounded-lg overflow-hidden">
+                  <img
+                    src={receiptPreview}
+                    alt="Receipt preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleRemoveReceipt}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  Remove Receipt
+                </Button>
+              </div>
+            )}
           </div>
 
           {error && (
